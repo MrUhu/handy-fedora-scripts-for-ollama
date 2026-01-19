@@ -13,11 +13,15 @@ backup_service_file() {
 add_ollama_env_vars() {
     if [ -f /etc/systemd/system/ollama.service ]; then
         # Check if variables already exist
-        if ! grep -q 'OLLAMA_VULKAN' /etc/systemd/system/ollama.service; then
+        # Most models are quantized to 4 Bits in the Ollama library - so the KV cache will also be quantized to 4 Bits
+        # Feel free to change this, if you need a more precise KV cache
+        if ! grep -q 'OLLAMA_KV_CACHE_TYPE' /etc/systemd/system/ollama.service; then
             # Backup before modifying
             backup_service_file
 
             # Add the environment variable lines after [Service] section
+            # If your GPU is officially supported by ROCm remove the OLLAMA_VULKAN line
+            # Otherwise keep it in for reliability reasons
             sudo sed -i '/\[Service\]/a Environment="OLLAMA_VULKAN=1"' /etc/systemd/system/ollama.service
             sudo sed -i '/\[Service\]/a Environment="OLLAMA_KV_CACHE_TYPE=q4_0"' /etc/systemd/system/ollama.service
             sudo sed -i '/\[Service\]/a Environment="OLLAMA_NUM_PARALLEL=3"' /etc/systemd/system/ollama.service
