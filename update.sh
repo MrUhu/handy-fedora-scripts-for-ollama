@@ -98,15 +98,16 @@ add_ollama_env_vars
 
 # Update Ollama models if needed
 echo "Updating Ollama models where possible"
-models=$(ollama list --json 2>/dev/null | jq -r '.models[].name' || echo "")
-if [ -n "$models" ]; then
-    for model in $models; do
-        if [[ "$model" == my* ]]; then
-            echo "Skipping model: $model"
+# First check if there are any models to update
+model_count=$(ollama ls | grep -v "NAME" | wc -l)
+if [ "$model_count" -gt 0 ]; then
+    for i in $(ollama ls | awk '{ print $1}' | grep -v NAME); do
+        if [[ "$i" == my* ]]; then
+            echo "Skipping model: $i"
             continue
         fi
-        echo "Updating model: $model"
-        ollama pull "$model" || echo "Failed to update model: $model"
+        echo "Updating model: $i"
+        ollama pull "$i"
     done
 else
     echo "No models found or failed to list models"
