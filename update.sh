@@ -23,7 +23,7 @@ add_ollama_env_vars() {
             # If your GPU is officially supported by ROCm remove the OLLAMA_VULKAN line
             # Otherwise keep it in for reliability reasons
             sudo sed -i '/\[Service\]/a Environment="OLLAMA_VULKAN=1"' /etc/systemd/system/ollama.service
-            sudo sed -i '/\[Service\]/a Environment="OLLAMA_KV_CACHE_TYPE=q4_0"' /etc/systemd/system/ollama.service
+            sudo sed -i '/\[Service\]/a Environment="OLLAMA_KV_CACHE_TYPE=q8_0"' /etc/systemd/system/ollama.service
             sudo sed -i '/\[Service\]/a Environment="OLLAMA_NUM_PARALLEL=3"' /etc/systemd/system/ollama.service
             sudo sed -i '/\[Service\]/a Environment="OLLAMA_MAX_LOADED_MODELS=3"' /etc/systemd/system/ollama.service
             echo "Environment variables added"
