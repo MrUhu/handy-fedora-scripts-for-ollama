@@ -28,6 +28,7 @@ This script first runs a full system update and ensures everything is up an runn
    - Sets `OLLAMA_KV_CACHE_TYPE=q4_0` to optimize cache usage
    - Sets `OLLAMA_NUM_PARALLEL=3` to control parallelism if coding, embedding and autocompletion models are executed
    - Sets `OLLAMA_MAX_LOADED_MODELS=3` to set max loaded models to 3
+   - Sets `OLLAMA_KEEP_ALIVE=6h` to make sure longer tasks do not end in a timeout
    - Reloads systemd configuration and restarts Ollama service
 
 4. **Model Updates**:

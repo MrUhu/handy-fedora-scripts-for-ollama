@@ -26,6 +26,7 @@ add_ollama_env_vars() {
             sudo sed -i '/\[Service\]/a Environment="OLLAMA_KV_CACHE_TYPE=q8_0"' /etc/systemd/system/ollama.service
             sudo sed -i '/\[Service\]/a Environment="OLLAMA_NUM_PARALLEL=3"' /etc/systemd/system/ollama.service
             sudo sed -i '/\[Service\]/a Environment="OLLAMA_MAX_LOADED_MODELS=3"' /etc/systemd/system/ollama.service
+            sudo sed -i '/\[Service\]/a Environment="OLLAMA_KEEP_ALIVE=6h"' /etc/systemd/system/ollama.service
             echo "Environment variables added"
 
             # Restart Ollama with GPU enabled
