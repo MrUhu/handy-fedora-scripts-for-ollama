@@ -1,122 +1,75 @@
-## Overview
-These scripts are designed to upgrade system packages, update Ollama, and configure AMD GPU memory settings for improved performance on local LLMs provided by Ollama.
+# Handy Fedora Scripts for Ollama
 
-Works with Ollama 0.14.2.
+A collection of scripts and configurations to optimize Ollama and local LLM workflows on Fedora Linux with AMD GPU support.
 
-***They are tested and used for Fedora Linux - please adjust for other distributions***
+## Directory Structure
 
-## What Each Script Accomplishes
+### Root Directory
 
-### `update.sh`
+This directory contains scripts for system configuration and Ollama management:
 
-#### Description
-When the ollama update is run, all set environment variables are deleted.
-Also, the update script is rather dumb and always updates even if Ollama is up-to-date.
-This script first runs a full system update and ensures everything is up an running on the Ollama side.
+- [`change_grubby_args_for_amd_igpu.sh`](change_grubby_args_for_amd_igpu.sh:1) - Configures AMD iGPU memory settings
+- [`README.md`](README.md:1) - This file
 
-1. **System Package Updates**: 
-   - Upgrades all installed packages using `dnf upgrade`
-   - Updates all system packages with `dnf update -y`
+### [`ollama/`](ollama/README.md:1)
 
-2. **Ollama Version Management**:
-   - Checks for latest Ollama version on GitHub
-   - Compares current local version with latest release
-   - If versions differ, downloads and installs the latest Ollama version
+Scripts for managing Ollama and AMD GPU memory configuration:
 
-3. **GPU Configuration**:
-   - Sets `OLLAMA_VULKAN=1` to enable iGPU Support via the usage of the Vulkan API - if your GPU is officially supported by ROCm, then delete this line in the script
-   - Sets `OLLAMA_KV_CACHE_TYPE=q4_0` to optimize cache usage
-   - Sets `OLLAMA_NUM_PARALLEL=3` to control parallelism if coding, embedding and autocompletion models are executed
-   - Sets `OLLAMA_MAX_LOADED_MODELS=3` to set max loaded models to 3
-   - Sets `OLLAMA_KEEP_ALIVE=6h` to make sure longer tasks do not end in a timeout
-   - Reloads systemd configuration and restarts Ollama service
+- [`update.sh`](ollama/update.sh:1) - Updates system packages and Ollama
+- [`overwrite_gpu_restriction_to_modelfiles.sh`](ollama/overwrite_gpu_restriction_to_modelfiles.sh:1) - Modifies model files for better GPU memory usage
+- [`unload_models.sh`](ollama/unload_models.sh:1) - Unloads all Ollama models to free GPU memory
+- [`README.md`](ollama/README.md:1) - Detailed documentation for ollama scripts
 
-4. **Model Updates**:
-   - Updates all installed Ollama models to their latest versions
+### [`llama-server/`](llama-server/README.md:1)
+
+Docker-based local LLM server setup:
+
+- [`docker-compose.yml`](llama-server/docker-compose.yml:1) - Main service configuration
+- [`run.sh`](llama-server/run.sh:1) - Script to start all services
+- [`Llama-Server.desktop`](llama-server/Llama-Server.desktop:1) - Desktop shortcut
+- [`devstral_template.jinja`](llama-server/devstral_template.jinja:1) - Custom chat template
+- [`README.md`](llama-server/README.md:1) - Detailed documentation for llama-server
+
+## Scripts Overview
 
 ### `change_grubby_args_for_amd_igpu.sh`
 
-#### Description
-This script changes the size of the GTT memory assigned to the AMD iGPU, but limits the size to half of the available system memory - this can be overwritten to 90% of system memory.
-If Ollama or AMD ROCm introduce no bugs that impact memory handling - the available LLM memory will be vRAM+GTT.
+Configures AMD iGPU memory settings for better LLM performance:
 
-1. **GTT Memory Configuration**:
-   - Calculates required GTT (Graphics Transfer Table) memory size based on user input
-   - Checks current amdgpu memory configuration in dmesg output
+- Calculates and sets GTT (Graphics Transfer Table) memory size
+- Updates kernel parameters for AMD GPU memory management
+- Sets `amdgpu.cwsr_enable=0` to reduce crashes
+- Requires system reboot to take effect
 
-2. **Parameter Adjustment**:
-   - If GTT memory values don't match, updates kernel parameters with `amdttm.pages_limit` and `amdttm.page_pool_size`
-   - When the GTT memory is set: `amdgpu.cwsr_enable=0` will also be set to possibly decrease crashes
-   - Applies changes using `grubby` command
-
-3. **Backup & Logging**:
-   - Saves amdgpu memory dmesg output for backup
-   - Provides detailed status information about configuration changes
-
-4. **System Reboot**:
-   - For the changes to take effect - the system will be rebooted
-
-### `overwrite_gpu_restriction_to_modelfiles.sh`
-
-#### Description
-This script modifies Ollama model files to include a `num_gpu` parameter based on the layer count of each model.
-Sometimes it is necessary to force Ollama to use the whole memory available to the iGPU (vRAM+GTT).
-This script creates modelfiles for all models installed on the system and adds these models with a "my" prefix to Ollama.
-May or may not work - use at your own risk.
-
-1. **Directory Setup**:
-   - Ensures a directory named `models` exists to store modelfiles.
-
-2. **Model Processing**:
-   - Retrieves the list of installed Ollama models.
-   - For each model, it extracts the model name and generates a new model name with a `my` prefix.
-
-3. **Modelfile Generation**:
-   - For each model, it exports the modelfile using `ollama show`.
-   - It then fetches block_count information form the /api/show endpoint of the locally running Ollama instance
-
-4. **Parameter Injection**:
-   - Removes the original `FROM` line from the modelfile.
-   - Adds a new `FROM` statement to recreate the model.
-   - Injects a `num_gpu` parameter into the modelfile, using the layer count.
-
-5. **Model Recreation**:
-   - Uses the modified modelfile to create a new model with the `num_gpu` restriction.
-   - This allows better GPU memory management for models when running locally.
-
-## Important Notes
-- These scripts were generated with the help of local AI (Qwen3-Coder 30b)
-- These scripts were tested and will work on Fedora 42
-- Usage at your own risk
-- Requires root privileges to execute properly
+**Use Case**: Improve memory availability for LLMs when using AMD integrated graphics
 
 ## Usage
-To apply all changes, run scripts with appropriate permissions, e.g.:
+
+### For Ollama Users
+
 ```bash
-chmod +x update.sh change_gtt_size_for_amd_igpu.sh overwrite_gpu_restriction_to_modelfiles.sh
+cd ollama
+chmod +x update.sh overwrite_gpu_restriction_to_modelfiles.sh unload_models.sh
 ./update.sh
-./overwrite_gpu_restriction_to_modelfiles.sh
-./change_gtt_size_for_amd_igpu.sh
 ```
 
-## _Little Extra_
+### For Local LLM Server
 
-### `unload_ollama_models.sh`
+```bash
+cd llama-server
+./run.sh
+```
 
-#### Description
-This script is a utility for testing purposes when running multiple large language models sequentially. It helps free up GPU memory by stopping all currently loaded Ollama models.
+## System Requirements
 
-1. **Model Detection**:
-   - Lists all currently loaded models using `ollama ps`
-   - Extracts model names from the output
+- Fedora Linux (tested on Fedora 42)
+- AMD GPU with ROCm support
+- Sufficient system memory and VRAM for LLM workloads
+- Docker and Docker Compose for llama-server
 
-2. **Memory Management**:
-   - Stops each loaded model to free GPU memory
-   - Provides feedback about which models are being stopped
+## Notes
 
-3. **Use Case**:
-   - Particularly useful when testing multiple models in succession
-   - Helps prevent GPU memory exhaustion during rapid model switching
-   - Can be run between model testing sessions to ensure clean state
-
-**Note**: This is a testing utility and should be used with caution in production environments.
+- These scripts are tested on Fedora Linux
+- Requires root privileges for some operations
+- Use at your own risk
+- Some scripts may need adjustment for non-Fedora distributions

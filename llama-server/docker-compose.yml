@@ -1,0 +1,56 @@
+services:
+  # --- The "Brain" ---
+  roo-brain:
+    image: ghcr.io/ggml-org/llama.cpp:server-rocm
+    container_name: code-brain
+    environment:
+      - HSA_OVERRIDE_GFX_VERSION=11.0.0 # Force gfx1103 compatibility
+      - GGML_HIP_VISIBLE_DEVICES=0
+    ports:
+      - "11435:11434"
+    devices:
+      - "/dev/kfd:/dev/kfd"
+      - "/dev/dri:/dev/dri"
+    volumes:
+      - ./models:/root/.cache/llama.cpp
+      - ./devstral_template.jinja:/templates/devstral_template.jinja
+    command: >
+      -hf unsloth/Devstral-Small-2-24B-Instruct-2512-GGUF:Q4_K_M
+      --chat-template-file /templates/devstral_template.jinja
+      --port 11434
+      --host 0.0.0.0
+      -c 65536
+      -ngl 99
+      --flash-attn on
+      --no-mmap
+
+  # --- The "Librarian" ---
+  roo-embedder:
+    image: ghcr.io/ggml-org/llama.cpp:server-rocm
+    container_name: code-embedder
+    environment:
+      - HSA_OVERRIDE_GFX_VERSION=11.0.0
+    ports:
+      - "11436:11434"
+    devices:
+      - "/dev/kfd:/dev/kfd"
+      - "/dev/dri:/dev/dri"
+    volumes:
+      - ./models:/root/.cache/llama.cpp
+    command: >
+      -hf Qwen/Qwen3-Embedding-0.6B-GGUF:Q8_0
+      --port 11434
+      --host 0.0.0.0
+      --embedding
+      -ngl 99
+      -c 8192
+
+  # --- The "Archive" ---
+  qdrant:
+    image: qdrant/qdrant:latest
+    container_name: code-archive
+    ports:
+      - "6333:6333"
+    volumes:
+      - ./qdrant:/qdrant/storage
+    restart: unless-stopped
