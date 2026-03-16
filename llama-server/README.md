@@ -6,8 +6,8 @@ A Docker-based setup for running local LLM services using llama.cpp with ROCm su
 
 This directory contains configuration files to run a local LLM server environment with three main services:
 
-1. **roo-brain** - The main LLM inference service (Devstral-Small-2-24B-Instruct)
-2. **roo-embedder** - Embedding service (Qwen3-Embedding-0.6B)
+1. **roo-brain** - The main LLM inference service (unsloth/Qwen3.5-35B-A3B-GGUF:MXFP4_MOE)
+2. **roo-embedder** - Embedding service (Qwen/Qwen3-Embedding-0.6B-GGUF:Q8_0)
 3. **qdrant** - Vector database for storing and retrieving embeddings
 
 ## Components
@@ -16,24 +16,31 @@ This directory contains configuration files to run a local LLM server environmen
 
 The main configuration file that defines all services:
 
-- **roo-brain**: Runs the Devstral-Small-2-24B-Instruct model for coding assistance
+- **roo-brain**: Runs the unsloth/Qwen3.5-35B-A3B-GGUF:MXFP4_MOE model for coding assistance
   - Uses ROCm for AMD GPU acceleration
   - Port: 11435
-  - Custom chat template from [`devstral_template.jinja`](llama-server/devstral_template.jinja:1)
+  - Context size: 65536
+  - Cache types: q8_0 for both K and V
+  - Flash attention: enabled
+  - Health check configured
   
-- **roo-embedder**: Runs the Qwen3-Embedding-0.6B model for text embeddings
-  - Uses ROCm for AMD GPU acceleration  
+- **roo-embedder**: Runs the Qwen/Qwen3-Embedding-0.6B-GGUF:Q8_0 model for text embeddings
+  - Uses ROCm for AMD GPU acceleration
   - Port: 11436
+  - Context size: 8192
   - Optimized for embedding tasks
+  - Health check configured
   
 - **qdrant**: Vector database for storing embeddings
   - Persistent storage in `${HOME}/Dokumente/Coding-AI/qdrant`
   - Port: 6333
+  - Health check configured
 
 ### [`run.sh`](llama-server/run.sh:1)
 
-Simple bash script to start all services:
-- Changes to the project directory
+Bash script to pull latest images and start all services:
+- Uses absolute path to project directory
+- Pulls newest Docker images before starting
 - Executes `docker compose up`
 
 ### [`Llama-Server.desktop`](llama-server/Llama-Server.desktop:1)
@@ -45,7 +52,7 @@ Desktop entry file for launching the server from the application menu:
 
 ### [`devstral_template.jinja`](llama-server/devstral_template.jinja:1)
 
-Custom chat template for the Devstral model, defining the prompt format and conversation structure.
+Custom chat template file (currently unused but retained in the directory).
 
 ## Usage
 

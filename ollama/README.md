@@ -1,7 +1,7 @@
 ## Overview
 These scripts are designed to upgrade system packages, update Ollama, and configure AMD GPU memory settings for improved performance on local LLMs provided by Ollama.
 
-Works with Ollama 0.16.2.
+Works with recent Ollama versions.
 
 ***They are tested and used for Fedora Linux - please adjust for other distributions***
 
@@ -25,7 +25,7 @@ This script first runs a full system update and ensures everything is up an runn
 
 3. **GPU Configuration**:
    - Sets `OLLAMA_VULKAN=1` to enable iGPU Support via the usage of the Vulkan API - if your GPU is officially supported by ROCm, then delete this line in the script
-   - Sets `OLLAMA_KV_CACHE_TYPE=q4_0` to optimize cache usage
+   - Sets `OLLAMA_KV_CACHE_TYPE=q8_0` to optimize cache usage (higher precision than default q4_0)
    - Sets `OLLAMA_NUM_PARALLEL=3` to control parallelism if coding, embedding and autocompletion models are executed
    - Sets `OLLAMA_MAX_LOADED_MODELS=3` to set max loaded models to 3
    - Sets `OLLAMA_KEEP_ALIVE=6h` to make sure longer tasks do not end in a timeout
@@ -63,38 +63,34 @@ May or may not work - use at your own risk.
    - This allows better GPU memory management for models when running locally.
 
 ## Important Notes
-- These scripts were generated with the help of local AI (Qwen3-Coder 30b)
-- These scripts were tested and will work on Fedora 42
+- These scripts were tested and work on Fedora Linux
 - Usage at your own risk
 - Requires root privileges to execute properly
 
 ## Usage
 To apply all changes, run scripts with appropriate permissions, e.g.:
 ```bash
-chmod +x update.sh change_gtt_size_for_amd_igpu.sh overwrite_gpu_restriction_to_modelfiles.sh
+chmod +x update.sh overwrite_gpu_restriction_to_modelfiles.sh unload_models.sh
 ./update.sh
 ./overwrite_gpu_restriction_to_modelfiles.sh
-./change_gtt_size_for_amd_igpu.sh
 ```
 
-## _Little Extra_
-
-### `unload_ollama_models.sh`
+### `unload_models.sh`
 
 #### Description
 This script is a utility for testing purposes when running multiple large language models sequentially. It helps free up GPU memory by stopping all currently loaded Ollama models.
 
 1. **Model Detection**:
-   - Lists all currently loaded models using `ollama ps`
-   - Extracts model names from the output
+    - Lists all currently loaded models using `ollama ps`
+    - Extracts model names from the output
 
 2. **Memory Management**:
-   - Stops each loaded model to free GPU memory
-   - Provides feedback about which models are being stopped
+    - Stops each loaded model to free GPU memory
+    - Provides feedback about which models are being stopped
 
 3. **Use Case**:
-   - Particularly useful when testing multiple models in succession
-   - Helps prevent GPU memory exhaustion during rapid model switching
-   - Can be run between model testing sessions to ensure clean state
+    - Particularly useful when testing multiple models in succession
+    - Helps prevent GPU memory exhaustion during rapid model switching
+    - Can be run between model testing sessions to ensure clean state
 
 **Note**: This is a testing utility and should be used with caution in production environments.

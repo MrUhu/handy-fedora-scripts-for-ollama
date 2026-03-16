@@ -12,17 +12,53 @@ services:
       - "/dev/kfd:/dev/kfd"
       - "/dev/dri:/dev/dri"
     volumes:
-      - ./models:/root/.cache/llama.cpp
-      - ./devstral_template.jinja:/templates/devstral_template.jinja
-    command: >
-      -hf unsloth/Devstral-Small-2-24B-Instruct-2512-GGUF:Q4_K_M
-      --chat-template-file /templates/devstral_template.jinja
-      --port 11434
-      --host 0.0.0.0
-      -c 65536
-      -ngl 99
-      --flash-attn on
-      --no-mmap
+      - ${HOME}/Dokumente/Coding-AI/models:/root/.cache/llama.cpp
+    #  - ./devstral_template.jinja:/templates/devstral_template.jinja
+    command:
+      - "-hf"
+      - "unsloth/Qwen3.5-35B-A3B-GGUF:MXFP4_MOE"
+      - "--port"
+      - "11434"
+      - "--host"
+      - "0.0.0.0"
+      - "-c"
+      - "65536"
+      - "--cache-type-k"
+      - "q8_0"
+      - "--cache-type-v"
+      - "q8_0"
+      - "-ngl"
+      - "99"
+      - "--flash-attn"
+      - "on"
+      - "-b"
+      - "512"
+      - "-ub"
+      - "512"
+      - "--threads"
+      - "8"
+      - "--parallel"
+      - "1"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:11435/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 60s
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 32G
+          cpus: '8'
+        reservations:
+          memory: 16G
+          cpus: '4'
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "100m"
+        max-file: "3"
 
   # --- The "Librarian" ---
   roo-embedder:
@@ -36,14 +72,39 @@ services:
       - "/dev/kfd:/dev/kfd"
       - "/dev/dri:/dev/dri"
     volumes:
-      - ./models:/root/.cache/llama.cpp
-    command: >
-      -hf Qwen/Qwen3-Embedding-0.6B-GGUF:Q8_0
-      --port 11434
-      --host 0.0.0.0
-      --embedding
-      -ngl 99
-      -c 8192
+      - ${HOME}/Dokumente/Coding-AI/models:/root/.cache/llama.cpp
+    command:
+      - "-hf"
+      - "Qwen/Qwen3-Embedding-0.6B-GGUF:Q8_0"
+      - "--port"
+      - "11434"
+      - "--host"
+      - "0.0.0.0"
+      - "--embedding"
+      - "-ngl"
+      - "99"
+      - "-c"
+      - "8192"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:11436/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 8G
+          cpus: '4'
+        reservations:
+          memory: 4G
+          cpus: '2'
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "100m"
+        max-file: "3"
 
   # --- The "Archive" ---
   qdrant:
@@ -52,5 +113,29 @@ services:
     ports:
       - "6333:6333"
     volumes:
-      - ./qdrant:/qdrant/storage
+      - ${HOME}/Dokumente/Coding-AI/qdrant:/qdrant/storage
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:6333/"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
     restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 8G
+          cpus: '4'
+        reservations:
+          memory: 4G
+          cpus: '2'
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "100m"
+        max-file: "3"
+
+networks:
+  default:
+    name: llama-network
+    driver: bridge

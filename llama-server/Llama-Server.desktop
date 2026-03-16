@@ -1,7 +1,7 @@
 [Desktop Entry]
 Comment=Startet Llama-Server für Coding Umgebung
-Exec=konsole --hold -e /home/user/path/to/repo/handy-fedora-scripts-for-ollama/llama-server/run.sh
-Icon=/home/user/path/to/repo/handy-fedora-scripts-for-ollama/llama-server/desktop_icon.png
+Exec=konsole --hold -e /home/mruhu/Projekte/handy-fedora-scripts-for-ollama/llama-server/run.sh
+Icon=/home/mruhu/Projekte/handy-fedora-scripts-for-ollama/llama-server/desktop_icon.png
 Name=Llama-Server
 NoDisplay=false
 Path=

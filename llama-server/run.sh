@@ -1,8 +1,13 @@
 #!/bin/bash
-PROJECT_DIR="/home/user/path/to/repo/handy-fedora-scripts-for-ollama/llama-server"
+set -e
+
+PROJECT_DIR="/home/mruhu/Projekte/handy-fedora-scripts-for-ollama/llama-server"
 
 # Move to that directory or exit if it fails
-cd "$PROJECT_DIR" || { echo "Directory not found"; exit 1; }
+cd "$PROJECT_DIR" || { echo "Error: Directory not found"; exit 1; }
 
-# Start services
+echo "=== Pulling newest Docker images ==="
+docker compose pull
+
+echo "=== Starting services ==="
 docker compose up
