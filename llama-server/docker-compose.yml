@@ -12,7 +12,7 @@ services:
       - "/dev/kfd:/dev/kfd"
       - "/dev/dri:/dev/dri"
     volumes:
-      - ${HOME}/Dokumente/Coding-AI/models:/root/.cache/llama.cpp
+      - ${HOME}/Dokumente/Coding-AI/models:/root/.cache/huggingface/hub
     #  - ./devstral_template.jinja:/templates/devstral_template.jinja
     command:
       - "-hf"
@@ -39,6 +39,18 @@ services:
       - "8"
       - "--parallel"
       - "1"
+      - "--temp"
+      - "0.6"
+      - "--top-p"
+      - "0.95"
+      - "--top-k"
+      - "20"
+      - "--min-p"
+      - "0.0"
+      - "--presence-penalty"
+      - "0.0"
+      - "--repeat-penalty"
+      - "1.0"
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:11435/health"]
       interval: 10s
@@ -72,7 +84,7 @@ services:
       - "/dev/kfd:/dev/kfd"
       - "/dev/dri:/dev/dri"
     volumes:
-      - ${HOME}/Dokumente/Coding-AI/models:/root/.cache/llama.cpp
+      - ${HOME}/Dokumente/Coding-AI/models:/root/.cache/huggingface/hub
     command:
       - "-hf"
       - "Qwen/Qwen3-Embedding-0.6B-GGUF:Q8_0"
