@@ -6,33 +6,40 @@ A Docker-based setup for running local LLM services using llama.cpp with ROCm su
 
 This directory contains configuration files to run a local LLM server environment with three main services:
 
-1. **roo-brain** - The main LLM inference service (unsloth/Qwen3.5-35B-A3B-GGUF:MXFP4_MOE)
-2. **roo-embedder** - Embedding service (Qwen/Qwen3-Embedding-0.6B-GGUF:Q8_0)
-3. **qdrant** - Vector database for storing and retrieving embeddings
+1. **code-brain** - The main LLM inference service (unsloth/Qwen3.5-35B-A3B-GGUF:UD-Q4_K_XL)
+2. **code-embedder** - Embedding service (Qwen/Qwen3-Embedding-0.6B-GGUF:Q8_0)
+3. **code-archive** - Vector database for storing and retrieving embeddings
 
-## Components
+## Configuration
+
+### Environment Variables (`.env` file)
+
+This setup uses a `.env` file for configurable paths and volumes. Create a `.env` file in this directory based on the [``.env.example`](llama-server/.env.example:1) template. The `.env` file defines:
+
+- `VOLUME_DIR`: Base directory for model and data volumes
+- Other environment-specific configurations
 
 ### [`docker-compose.yml`](llama-server/docker-compose.yml:1)
 
 The main configuration file that defines all services:
 
-- **roo-brain**: Runs the unsloth/Qwen3.5-35B-A3B-GGUF:MXFP4_MOE model for coding assistance
+- **code-brain**: Runs the unsloth/Qwen3.5-35B-A3B-GGUF:UD-Q4_K_XL model for coding assistance
   - Uses ROCm for AMD GPU acceleration
   - Port: 11435
-  - Context size: 65536
+  - Context size: 131072
   - Cache types: q8_0 for both K and V
   - Flash attention: enabled
   - Health check configured
   
-- **roo-embedder**: Runs the Qwen/Qwen3-Embedding-0.6B-GGUF:Q8_0 model for text embeddings
+- **code-embedder**: Runs the Qwen/Qwen3-Embedding-0.6B-GGUF:Q8_0 model for text embeddings
   - Uses ROCm for AMD GPU acceleration
   - Port: 11436
   - Context size: 8192
   - Optimized for embedding tasks
   - Health check configured
   
-- **qdrant**: Vector database for storing embeddings
-  - Persistent storage in `${HOME}/Dokumente/Coding-AI/qdrant`
+- **code-archive**: Vector database for storing embeddings
+  - Persistent storage in `${VOLUME_DIR}/qdrant`
   - Port: 6333
   - Health check configured
 
@@ -75,11 +82,11 @@ Press `Ctrl+C` in the terminal where the services are running, or close the term
 - Docker and Docker Compose
 - AMD GPU with ROCm support
 - Sufficient VRAM and system memory for the models
-- Models downloaded to `${HOME}/Dokumente/Coding-AI/models`
+- Models downloaded to `${VOLUME_DIR}/models` (configured in `.env` file)
 
 ## Notes
 
 - The services are configured to use AMD ROCm for GPU acceleration
 - HSA_OVERRIDE_GFX_VERSION is set to 11.0.0 for compatibility
 - Models are loaded from a shared volume for persistence
-- The qdrant service persists data to avoid losing embeddings on restart
+- The code-archive service persists data to avoid losing embeddings on restart

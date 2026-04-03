@@ -1,7 +1,15 @@
 #!/bin/bash
 set -e
 
-PROJECT_DIR="/home/mruhu/Projekte/handy-fedora-scripts-for-ollama/llama-server"
+# Load environment variables from .env file if it exists
+if [ -f .env ]; then
+  set -a
+  source .env
+  set +a
+fi
+
+# Use PROJECT_DIR from .env or default to current directory
+PROJECT_DIR="${PROJECT_DIR:-$(pwd)}"
 
 # Move to that directory or exit if it fails
 cd "$PROJECT_DIR" || { echo "Error: Directory not found"; exit 1; }

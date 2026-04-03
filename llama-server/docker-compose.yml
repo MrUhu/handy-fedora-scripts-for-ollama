@@ -12,17 +12,17 @@ services:
       - "/dev/kfd:/dev/kfd"
       - "/dev/dri:/dev/dri"
     volumes:
-      - ${HOME}/Dokumente/Coding-AI/models:/root/.cache/huggingface/hub
+      - ${VOLUME_DIR}/models:/root/.cache/huggingface/hub
     #  - ./devstral_template.jinja:/templates/devstral_template.jinja
     command:
       - "-hf"
-      - "unsloth/Qwen3.5-35B-A3B-GGUF:MXFP4_MOE"
+      - "unsloth/Qwen3.5-35B-A3B-GGUF:UD-Q4_K_XL"
       - "--port"
       - "11434"
       - "--host"
       - "0.0.0.0"
       - "-c"
-      - "65536"
+      - "131072"
       - "--cache-type-k"
       - "q8_0"
       - "--cache-type-v"
@@ -84,7 +84,7 @@ services:
       - "/dev/kfd:/dev/kfd"
       - "/dev/dri:/dev/dri"
     volumes:
-      - ${HOME}/Dokumente/Coding-AI/models:/root/.cache/huggingface/hub
+      - ${VOLUME_DIR}/models:/root/.cache/huggingface/hub
     command:
       - "-hf"
       - "Qwen/Qwen3-Embedding-0.6B-GGUF:Q8_0"
@@ -125,7 +125,7 @@ services:
     ports:
       - "6333:6333"
     volumes:
-      - ${HOME}/Dokumente/Coding-AI/qdrant:/qdrant/storage
+      - ${VOLUME_DIR}/qdrant:/qdrant/storage
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:6333/"]
       interval: 10s

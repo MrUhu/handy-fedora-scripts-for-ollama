@@ -24,12 +24,14 @@ This script first runs a full system update and ensures everything is up an runn
    - If versions differ, downloads and installs the latest Ollama version
 
 3. **GPU Configuration**:
-   - Sets `OLLAMA_VULKAN=1` to enable iGPU Support via the usage of the Vulkan API - if your GPU is officially supported by ROCm, then delete this line in the script
-   - Sets `OLLAMA_KV_CACHE_TYPE=q8_0` to optimize cache usage (higher precision than default q4_0)
+   - Sets `OLLAMA_VULKAN=1` to enable iGPU Support via the usage of the Vulkan API - if your GPU is officially supported by ROCm, then delete this line in the script*
+   - Sets `OLLAMA_KV_CACHE_TYPE=q8_0` to optimize cache usage
    - Sets `OLLAMA_NUM_PARALLEL=3` to control parallelism if coding, embedding and autocompletion models are executed
    - Sets `OLLAMA_MAX_LOADED_MODELS=3` to set max loaded models to 3
    - Sets `OLLAMA_KEEP_ALIVE=6h` to make sure longer tasks do not end in a timeout
    - Reloads systemd configuration and restarts Ollama service
+
+   *unfortunately I still run into issues with a HSA_OVERRIDE_GFX_VERSION in Ollama - llama-server works better
 
 4. **Model Updates**:
    - Updates all installed Ollama models to their latest versions
