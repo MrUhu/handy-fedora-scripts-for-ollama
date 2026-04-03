@@ -4,7 +4,7 @@ services:
     image: ghcr.io/ggml-org/llama.cpp:server-rocm
     container_name: code-brain
     environment:
-      - HSA_OVERRIDE_GFX_VERSION=11.0.0 # Force gfx1103 compatibility
+      - HSA_OVERRIDE_GFX_VERSION=11.0.0
       - GGML_HIP_VISIBLE_DEVICES=0
     ports:
       - "11435:11434"

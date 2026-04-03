@@ -8,6 +8,12 @@ if [ -f .env ]; then
   set +a
 fi
 
+# Get the directory where the script is located
+SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &> /dev/null && pwd)
+
+# Change the working directory to that folder
+cd "$SCRIPT_DIR"
+
 # Use PROJECT_DIR from .env or default to current directory
 PROJECT_DIR="${PROJECT_DIR:-$(pwd)}"
 
