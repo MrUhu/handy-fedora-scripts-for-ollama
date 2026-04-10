@@ -50,6 +50,14 @@ sudo dnf upgrade -y || { echo "Package upgrade failed"; exit 1; }
 echo "Updating all system packages"
 sudo dnf update -y || { echo "Package update failed"; exit 1; }
 
+# Check if opencode is installed and executable before upgrading
+if command -v opencode &> /dev/null; then
+  echo "Updating OpenCode"
+  sudo opencode upgrade
+else
+  echo "Warning: opencode is not installed or not in PATH, skipping upgrade"
+fi
+
 # Get latest version from GitHub API
 latest_version=$(curl -fsSL https://api.github.com/repos/ollama/ollama/releases/latest | grep -Po '"tag_name": "\K[^"]*') || { echo "Failed to get latest version"; exit 1; }
 
