@@ -1,2 +1,4 @@
 *models/*
 llama-server/.env
+llama-server/llama-server_*.log
+ollama/ollama_*.log

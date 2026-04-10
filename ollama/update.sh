@@ -1,5 +1,13 @@
 #!/bin/bash
-#!/bin/bash
+set -e
+
+# Logging configuration
+LOG_FILE="ollama_update_$(date +%Y%m%d_%H%M%S).log"
+exec > >(tee -a "$LOG_FILE") 2>&1
+
+log() {
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] $1"
+}
 
 # Function to backup service file before modification - just in case
 backup_service_file() {
@@ -106,18 +114,28 @@ echo "Post-update environment variable check..."
 add_ollama_env_vars
 
 # Update Ollama models if needed
-echo "Updating Ollama models where possible"
+log "=== Starting model update phase ==="
+log "Raw ollama ls output:"
+ollama ls | tee -a "$LOG_FILE"
+
+log "Checking model count..."
 # First check if there are any models to update
-model_count=$(ollama ls | grep -v "NAME" | wc -l)
+model_count=$(ollama ls | grep -v "NAME" | wc -l) || { log "WARNING: grep -v returned non-zero, setting model_count to 0"; model_count=0; }
+log "Model count: $model_count"
+
 if [ "$model_count" -gt 0 ]; then
+    log "Models to update:"
+    ollama ls | awk '{ print $1}' | grep -v NAME | tee -a "$LOG_FILE"
+    
     for i in $(ollama ls | awk '{ print $1}' | grep -v NAME); do
         if [[ "$i" == my* ]]; then
-            echo "Skipping model: $i"
+            log "Skipping model: $i"
             continue
         fi
-        echo "Updating model: $i"
-        ollama pull "$i"
+        log "Updating model: $i"
+        ollama pull "$i" || { log "ERROR: Failed to pull model: $i"; }
     done
 else
-    echo "No models found or failed to list models"
+    log "No models found or failed to list models"
 fi
+log "=== Model update phase complete ==="
