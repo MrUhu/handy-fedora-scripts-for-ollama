@@ -16,7 +16,7 @@ services:
     #  - ./devstral_template.jinja:/templates/devstral_template.jinja
     command:
       - "-hf"
-      - "unsloth/Qwen3.5-35B-A3B-GGUF:UD-Q4_K_XL"
+      - "unsloth/Qwen3.6-35B-A3B-GGUF:UD-Q4_K_XL"
       - "--port"
       - "11434"
       - "--host"
