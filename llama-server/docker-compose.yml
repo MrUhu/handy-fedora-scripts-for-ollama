@@ -22,7 +22,7 @@ services:
       - "--host"
       - "0.0.0.0"
       - "-c"
-      - "131072"
+      - "65536"
       - "--cache-type-k"
       - "q8_0"
       - "--cache-type-v"
@@ -96,7 +96,7 @@ services:
       - "-ngl"
       - "99"
       - "-c"
-      - "8192"
+      - "4096"
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:11436/health"]
       interval: 10s
@@ -107,10 +107,10 @@ services:
     deploy:
       resources:
         limits:
-          memory: 8G
+          memory: 4G
           cpus: '4'
         reservations:
-          memory: 4G
+          memory: 2G
           cpus: '2'
     logging:
       driver: "json-file"

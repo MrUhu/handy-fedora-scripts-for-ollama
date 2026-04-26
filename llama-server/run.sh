@@ -2,7 +2,9 @@
 set -e
 
 # Logging configuration
-LOG_FILE="llama-server_run_$(date +%Y%m%d_%H%M%S).log"
+LOG_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &> /dev/null && pwd)/../logs"
+mkdir -p "$LOG_DIR"
+LOG_FILE="$LOG_DIR/llama-server_run_$(date +%Y%m%d_%H%M%S).log"
 exec > >(tee -a "$LOG_FILE") 2>&1
 
 # Log function
