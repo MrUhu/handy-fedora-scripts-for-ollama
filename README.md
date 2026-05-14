@@ -8,27 +8,27 @@ A collection of scripts and configurations to optimize Ollama and local LLM work
 
 This directory contains scripts for system configuration and Ollama management:
 
-- [`change_grubby_args_for_amd_igpu.sh`](change_grubby_args_for_amd_igpu.sh:1) - Configures AMD iGPU memory settings
-- [`README.md`](README.md:1) - This file
+- [`change_grubby_args_for_amd_igpu.sh`](change_grubby_args_for_amd_igpu.sh) - Configures AMD iGPU memory settings
+- [`README.md`](README.md) - This file
 
-### [`ollama/`](ollama/README.md:1)
+### [`ollama/`](ollama/README.md)
 
 Scripts for managing Ollama and AMD GPU memory configuration:
 
-- [`update.sh`](ollama/update.sh:1) - Updates system packages and Ollama
-- [`overwrite_gpu_restriction_to_modelfiles.sh`](ollama/overwrite_gpu_restriction_to_modelfiles.sh:1) - Modifies model files for better GPU memory usage
-- [`unload_models.sh`](ollama/unload_models.sh:1) - Unloads all Ollama models to free GPU memory
-- [`README.md`](ollama/README.md:1) - Detailed documentation for ollama scripts
+- [`update.sh`](ollama/update.sh) - Updates system packages and Ollama
+- [`overwrite_gpu_restriction_to_modelfiles.sh`](ollama/overwrite_gpu_restriction_to_modelfiles.sh) - Modifies model files for better GPU memory usage
+- [`unload_models.sh`](ollama/unload_models.sh) - Unloads all Ollama models to free GPU memory
+- [`README.md`](ollama/README.md) - Detailed documentation for ollama scripts
 
-### [`llama-server/`](llama-server/README.md:1)
+### [`llama-server/`](llama-server/README.md)
 
 Docker-based local LLM server setup:
 
-- [`docker-compose.yml`](llama-server/docker-compose.yml:1) - Main service configuration
-- [`run.sh`](llama-server/run.sh:1) - Script to start all services
-- [`Llama-Server.desktop`](llama-server/Llama-Server.desktop:1) - Desktop shortcut
-- [`devstral_template.jinja`](llama-server/devstral_template.jinja:1) - Custom chat template
-- [`README.md`](llama-server/README.md:1) - Detailed documentation for llama-server
+- [`docker-compose.yml`](llama-server/docker-compose.yml) - Main service configuration
+- [`run.sh`](llama-server/run.sh) - Script to start all services
+- [`Llama-Server.desktop`](llama-server/Llama-Server.desktop) - Desktop shortcut
+- [`devstral_template.jinja`](llama-server/devstral_template.jinja) - Custom chat template
+- [`README.md`](llama-server/README.md) - Detailed documentation for llama-server
 
 ## Scripts Overview
 

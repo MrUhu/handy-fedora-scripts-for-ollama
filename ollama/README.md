@@ -1,98 +1,105 @@
-## Overview
-These scripts are designed to upgrade system packages, update Ollama, and configure AMD GPU memory settings for improved performance on local LLMs provided by Ollama.
+# Ollama Management Scripts
 
-Works with recent Ollama versions.
+Scripts for managing Ollama on **Fedora Linux** with **AMD GPU** (ROCm) support.
 
-***They are tested and used for Fedora Linux - please adjust for other distributions***
+## Prerequisites
 
-## What Each Script Accomplishes
+- **Fedora Linux** — scripts tested on Fedora; adjust for other distributions
+- **`jq`** — required for `overwrite_gpu_restriction_to_modelfiles.sh` (JSON parsing)
+- **`curl`** — required for `update.sh` (GitHub API queries)
+- **`sudo`** privileges — required for system-level changes (systemd service modification)
 
-### `update.sh`
+---
 
-#### Description
-When the ollama update is run, all set environment variables are deleted.
-Also, the update script is rather dumb and always updates even if Ollama is up-to-date.
-This script first runs a full system update and ensures everything is up an running on the Ollama side.
+## Scripts Overview
 
-1. **System Package Updates**: 
-   - Upgrades all installed packages using `dnf upgrade`
-   - Updates all system packages with `dnf update -y`
+### `update.sh` — System + Ollama Update
 
-2. **Ollama Version Management**:
-   - Checks for latest Ollama version on GitHub
-   - Compares current local version with latest release
-   - If versions differ, downloads and installs the latest Ollama version
+Updates system packages, Ollama binary, and configures GPU environment variables.
 
-3. **GPU Configuration**:
-   - Sets `OLLAMA_VULKAN=1` to enable iGPU Support via the usage of the Vulkan API - if your GPU is officially supported by ROCm, then delete this line in the script*
-   - Sets `OLLAMA_KV_CACHE_TYPE=q8_0` to optimize cache usage
-   - Sets `OLLAMA_NUM_PARALLEL=3` to control parallelism if coding, embedding and autocompletion models are executed
-   - Sets `OLLAMA_MAX_LOADED_MODELS=3` to set max loaded models to 3
-   - Sets `OLLAMA_KEEP_ALIVE=6h` to make sure longer tasks do not end in a timeout
-   - Reloads systemd configuration and restarts Ollama service
+**What it does:**
 
-   *unfortunately I still run into issues with a HSA_OVERRIDE_GFX_VERSION in Ollama - llama-server works better
+1. **System Package Updates**
+   - Runs `dnf upgrade -y` and `dnf update -y`
+   - Updates **opencode** if installed (`sudo opencode upgrade`)
 
-4. **Model Updates**:
-   - Updates all installed Ollama models to their latest versions
+2. **Ollama Version Management**
+   - Queries GitHub API for latest Ollama release
+   - Compares with local version (`ollama --version`)
+   - Installs via `curl -fsSL https://ollama.com/install.sh | sh` if outdated
 
-### `overwrite_gpu_restriction_to_modelfiles.sh`
+3. **GPU Configuration** — injects environment variables into `/etc/systemd/system/ollama.service` via `sed`:
+   - `OLLAMA_VULKAN=1` — Enable Vulkan API for iGPU support (remove if your GPU is ROCm-native)
+   - `OLLAMA_KV_CACHE_TYPE=q8_0` — Optimized KV cache type (4-bit quantized models)
+   - `OLLAMA_NUM_PARALLEL=3` — Maximum parallel requests
+   - `OLLAMA_MAX_LOADED_MODELS=3` — Maximum concurrently loaded models
+   - `OLLAMA_KEEP_ALIVE=6h` — Keep models loaded for 6 hours after last use
 
-#### Description
-This script modifies Ollama model files to include a `num_gpu` parameter based on the layer count of each model.
-Sometimes it is necessary to force Ollama to use the whole memory available to the iGPU (vRAM+GTT).
-This script creates modelfiles for all models installed on the system and adds these models with a "my" prefix to Ollama.
-May or may not work - use at your own risk.
+4. **Service File Backup** — creates `/etc/systemd/system/ollama.service.bak` before modification
 
-1. **Directory Setup**:
-   - Ensures a directory named `models` exists to store modelfiles.
+5. **Model Updates** — pulls latest versions of all installed models (skips `my*` prefixed models)
 
-2. **Model Processing**:
-   - Retrieves the list of installed Ollama models.
-   - For each model, it extracts the model name and generates a new model name with a `my` prefix.
+**Logging:** Timestamped logs written to `../logs/ollama_update_<YYYYMMDD_HHMMSS>.log`
 
-3. **Modelfile Generation**:
-   - For each model, it exports the modelfile using `ollama show`.
-   - It then fetches block_count information form the /api/show endpoint of the locally running Ollama instance
-
-4. **Parameter Injection**:
-   - Removes the original `FROM` line from the modelfile.
-   - Adds a new `FROM` statement to recreate the model.
-   - Injects a `num_gpu` parameter into the modelfile, using the layer count.
-
-5. **Model Recreation**:
-   - Uses the modified modelfile to create a new model with the `num_gpu` restriction.
-   - This allows better GPU memory management for models when running locally.
-
-## Important Notes
-- These scripts were tested and work on Fedora Linux
-- Usage at your own risk
-- Requires root privileges to execute properly
-
-## Usage
-To apply all changes, run scripts with appropriate permissions, e.g.:
+**Usage:**
 ```bash
-chmod +x update.sh overwrite_gpu_restriction_to_modelfiles.sh unload_models.sh
+chmod +x update.sh
 ./update.sh
-./overwrite_gpu_restriction_to_modelfiles.sh
 ```
 
-### `unload_models.sh`
+---
 
-#### Description
-This script is a utility for testing purposes when running multiple large language models sequentially. It helps free up GPU memory by stopping all currently loaded Ollama models.
+### `overwrite_gpu_restriction_to_modelfiles.sh` — GPU-Optimized Modelfiles
 
-1. **Model Detection**:
-    - Lists all currently loaded models using `ollama ps`
-    - Extracts model names from the output
+Creates modified modelfiles with `num_gpu` parameter for full GPU memory utilization (vRAM + GTT).
 
-2. **Memory Management**:
-    - Stops each loaded model to free GPU memory
-    - Provides feedback about which models are being stopped
+**What it does:**
 
-3. **Use Case**:
-    - Particularly useful when testing multiple models in succession
-    - Helps prevent GPU memory exhaustion during rapid model switching
-    - Can be run between model testing sessions to ensure clean state
+1. Queries `http://localhost:11434/api/show` for each model's `block_count` from `model_info`
+2. Falls back to `num_layers` from `details` if `block_count` unavailable
+3. Adds `+1` to layer count for complete GPU offload
+4. Creates modelfiles in `./models/` directory with sanitized filenames (`/` and `:` replaced with `_`)
+5. Creates new models prefixed with `my` (e.g., `myllama3.1`)
 
-**Note**: This is a testing utility and should be used with caution in production environments.
+**Options:**
+
+| Flag | Behavior |
+|------|----------|
+| `--dry-run` | Preview changes without creating modelfiles or models |
+
+**Usage:**
+```bash
+chmod +x overwrite_gpu_restriction_to_modelfiles.sh
+./overwrite_gpu_restriction_to_modelfiles.sh          # Apply changes
+./overwrite_gpu_restriction_to_modelfiles.sh --dry-run # Preview only
+```
+
+---
+
+### `unload_models.sh` — Stop Loaded Models
+
+Stops all currently loaded Ollama models to free GPU memory.
+
+**What it does:**
+
+1. Lists loaded models via `ollama ps` (skips header row with `tail -n +2`)
+2. Extracts model names and stops each with `ollama stop <model>`
+
+**Use case:** Testing multiple models sequentially; prevents GPU memory exhaustion.
+
+**Usage:**
+```bash
+chmod +x unload_models.sh
+./unload_models.sh
+```
+
+---
+
+## Important Notes
+
+- **AMD GPU compatibility** — `HSA_OVERRIDE_GFX_VERSION=11.0.0` may be needed if you encounter issues (llama-server handles this better via Docker Compose)
+- **Service file backup** — `update.sh` creates `/etc/systemd/system/ollama.service.bak` before modifications
+- **Logging directory** — all scripts write logs to `../logs/` relative to the script location
+- **Environment variable injection** — env vars are injected directly into `/etc/systemd/system/ollama.service` via `sed`, not via environment files
+- **`my*` prefixed models** — skipped during automatic model updates in `update.sh`
+- **Usage at your own risk** — these scripts modify system configuration
